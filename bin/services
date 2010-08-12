@@ -9,6 +9,7 @@ use channel;
 use nickserv;
 use operserv;
 use chanserv;
+use global;
 use popm;
 use IO::Socket;
 my $config = config::get();
@@ -20,6 +21,7 @@ my $handler = handlers::new();
 my $nickserv = nickserv::new();
 my $chanserv = chanserv::new();
 my $operserv = operserv::new();
+my $global = global::new();
 my $popm = popm::new();
 my $socket;
 $this->{'sid'} = $config->{'sid'};
@@ -59,11 +61,13 @@ sub go {
 	$this->client_create($nickserv->{'uid'},$nickserv->{'nick'},$nickserv->{'ident'},$nickserv->{'host'},$nickserv->{'gecos'});
 	$this->client_create($chanserv->{'uid'},$chanserv->{'nick'},$chanserv->{'ident'},$chanserv->{'host'},$chanserv->{'gecos'});
 	$this->client_create($operserv->{'uid'},$operserv->{'nick'},$operserv->{'ident'},$operserv->{'host'},$operserv->{'gecos'});
+	$this->client_create($global->{'uid'},$global->{'nick'},$global->{'ident'},$global->{'host'},$global->{'gecos'});
 	$this->client_create($popm->{'uid'},$popm->{'nick'},$popm->{'ident'},$popm->{'host'},$popm->{'gecos'});
 	my $time = $channels->time($config->{'log'});
 	$this->s_send($this->{'sid'},"SJOIN $time ".$config->{'log'}." + :\@".$nickserv->{'uid'});
 	$this->s_send($this->{'sid'},"SJOIN $time ".$config->{'log'}." + :\@".$chanserv->{'uid'});
 	$this->s_send($this->{'sid'},"SJOIN $time ".$config->{'log'}." + :\@".$operserv->{'uid'});
+	$this->s_send($this->{'sid'},"SJOIN $time ".$config->{'log'}." + :\@".$global->{'uid'});
 	$this->s_send($this->{'sid'},"SJOIN $time ".$config->{'log'}." + :\@".$popm->{'uid'});
 	$operserv->log($this,'Startup','Services linked and started sucessfully');
 	$popm->log($this,'Global scan','Scanning all users on the network. The more DNS lists you have configured, the longer the scan will take. Please be patient.');
@@ -88,7 +92,7 @@ sub client_privmsg {
 sub client_notice {
 	my ($this,$uid,$target,$msg) = @_;
 	$this->s_send($uid,"NOTICE $target :$msg");
-}
+}	$this->client_create($popm->{'uid'},$popm->{'nick'},$popm->{'ident'},$popm->{'host'},$popm->{'gecos'});
 sub client_mode {
 	my ($this,$uid,$target,$str) = @_;
 	my $channel = $channels->lookup($target);
