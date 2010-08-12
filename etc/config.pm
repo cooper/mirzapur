@@ -14,7 +14,7 @@ my $this = {
 	net	=>	'cooper-dev',			# IRC network name
 	log	=> 	'#services',			# services logging channel
 	# Storing data
-	back	=>	'csv',				# database backend (others not yet supported)
+	back	=>	'csv',				# database backend (others not yet supported) default is 'csv'
 	dir	=>	'db',				# storage directory
 	# DNSBL
 	rbl =>	[				
