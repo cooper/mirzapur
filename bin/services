@@ -1,0 +1,118 @@
+#!/usr/bin/perl
+BEGIN { push @INC, ('../etc','../inc'); }
+use strict;
+use config;
+use db;
+use handlers;
+use user;
+use channel;
+use nickserv;
+use operserv;
+use chanserv;
+use popm;
+use IO::Socket;
+my $config = config::get();
+my $this = {}; bless $this;
+my $db = db::new();
+my $users = user::new();
+my $channels = channel::new();
+my $handler = handlers::new();
+my $nickserv = nickserv::new();
+my $chanserv = chanserv::new();
+my $operserv = operserv::new();
+my $popm = popm::new();
+my $socket;
+$this->{'sid'} = $config->{'sid'};
+$this->{'log'} = $config->{'log'};
+$this->{'start'} = time;
+$this->connect();
+while (my $data = <$socket>) {
+	$data =~ s/\s+$//;
+	$data =~ s/^\s+//;
+	my @ex = split / /, $data;
+	my $from = $ex[0]; $from =~ s/\://;
+	my $command = $ex[1];
+	print "$data\n";
+	if ($from eq 'PING') { $handler->r_ping($this,$data); }
+	if ($command eq 'EUID') { $handler->euid($this,$data); }
+	if ($command eq 'SJOIN') { $handler->sjoin($this,$data); }
+	if ($command eq 'JOIN') { $handler->join($this,$data); }
+	if ($command eq 'PRIVMSG') { $handler->privmsg($this,$data); }
+	if ($command eq 'QUIT') { $handler->quit($this,$data); }
+	if ($command eq 'PART') { $handler->part($this,$data); }
+	if ($command eq 'MODE') { $handler->usermode($this,$data); }
+}
+sub connect {
+	my $this = shift;
+	$socket = IO::Socket::INET->new(
+		PeerAddr => $config->{'addr'},
+		PeerPort => $config->{'port'},
+		Proto	 => 'tcp'
+	) or die "Socket could not be established: $@\n";
+	$this->send_data('CAPAB :EUID SERVICES');
+	$this->send_data('PASS '.$config->{'pass'}.' TS 6 :'.$config->{'sid'});
+	$this->send_data('SERVER '.$config->{'link'}.' 1 :'.$config->{'name'});
+	$this->s_send($this->{'sid'},'SVINFO 6 6 0 :'.time);
+}
+sub go {
+	my $this = shift;
+	$this->client_create($nickserv->{'uid'},$nickserv->{'nick'},$nickserv->{'ident'},$nickserv->{'host'},$nickserv->{'gecos'});
+	$this->client_create($chanserv->{'uid'},$chanserv->{'nick'},$chanserv->{'ident'},$chanserv->{'host'},$chanserv->{'gecos'});
+	$this->client_create($operserv->{'uid'},$operserv->{'nick'},$operserv->{'ident'},$operserv->{'host'},$operserv->{'gecos'});
+	$this->client_create($popm->{'uid'},$popm->{'nick'},$popm->{'ident'},$popm->{'host'},$popm->{'gecos'});
+	my $time = $channels->time($config->{'log'});
+	$this->s_send($this->{'sid'},"SJOIN $time ".$config->{'log'}." + :\@".$nickserv->{'uid'});
+	$this->s_send($this->{'sid'},"SJOIN $time ".$config->{'log'}." + :\@".$chanserv->{'uid'});
+	$this->s_send($this->{'sid'},"SJOIN $time ".$config->{'log'}." + :\@".$operserv->{'uid'});
+	$this->s_send($this->{'sid'},"SJOIN $time ".$config->{'log'}." + :\@".$popm->{'uid'});
+	$operserv->log($this,'Startup','Services linked and started sucessfully');
+	$popm->log($this,'Global scan','Scanning all users on the network. The more DNS lists you have configured, the longer the scan will take. Please be patient.');
+	$popm->checkall($this);
+}
+sub rbl {
+	my ($d,$ip) = @_;
+	return $popm->check($ip);
+}
+sub rbl_kill {
+	my ($d,$user,$rbl) = @_;
+	$popm->kill($this,$user,$rbl);
+}
+sub client_create {
+	my ($this,$uid,$nick,$ident,$host,$gecos) = @_;
+	$this->s_send($this->{'sid'},"EUID $nick 1 ".time." +ioS $ident $host 0.0.0.0 $uid * * :$gecos");
+}
+sub client_privmsg {
+	my ($this,$uid,$target,$msg) = @_;
+	$this->s_send($uid,"PRIVMSG $target :$msg");
+}
+sub client_notice {
+	my ($this,$uid,$target,$msg) = @_;
+	$this->s_send($uid,"NOTICE $target :$msg");
+}
+sub client_mode {
+	my ($this,$uid,$target,$str) = @_;
+	my $channel = $channels->lookup($target);
+	my $time;
+	$time = $channel->{'time'} if defined $channel->{'time'};
+	$time = time unless defined $channel->{'time'};
+	$this->s_send($uid,"TMODE $time $target $str");
+}
+sub sec2human {
+	my $d = shift;
+	my $secs = shift;
+	if    ($secs >= 365*24*60*60) { return sprintf '%.1f years ('.$secs.' seconds)', $secs/(365+*24*60*60); }
+	elsif ($secs >= 24*60*60) { return sprintf '%.1f days ('.$secs.' seconds)', $secs/(+24*60*60); }
+	elsif ($secs >= 60*60) { return sprintf '%.1f hours ('.$secs.' seconds)', $secs/(+60*60); }
+	elsif ($secs >= 60) { return sprintf '%.1f minutes ('.$secs.' seconds)', $secs/(+60); }
+	else { return sprintf '%s seconds', $secs; }
+}
+sub send_data {
+	my $this = shift;
+	my $send = shift;
+	print "[send] $send\n";
+	print $socket "$send\n";
+}
+sub s_send {
+	my ($this,$svs,$send) = @_;
+	$this->send_data(":$svs $send");
+}
