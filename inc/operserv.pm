@@ -104,6 +104,7 @@ sub os_clearchan {
 			my $usr = $users->lookup($u);
 			unless ($usr->{'modes'} =~ m/o/) {
 				$this->kick($main,$chn->{'name'},$u,'Channel cleared');
+				$channels->deluser($u,$chn->{'name'},time);
 				$i++;
 			} else {
 				$this->notice($main,$uid,$usr->{'nick'}." was ignored while clearing \2".$chn->{'name'}."\2.");
