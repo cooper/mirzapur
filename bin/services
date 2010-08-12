@@ -101,6 +101,10 @@ sub client_mode {
 	$time = time unless defined $channel->{'time'};
 	$this->s_send($uid,"TMODE $time $target $str");
 }
+sub client_kick {
+	my ($this,$uid,$channel,$target,$msg) = @_;
+	$this->s_send($uid,"KICK $channel $target :$msg");
+}
 sub sec2human {
 	my $d = shift;
 	my $secs = shift;
