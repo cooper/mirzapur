@@ -4,12 +4,14 @@ use strict;
 use config;
 use user;
 use db;
+use global;
 use channel;
 package operserv;
 my $this = {}; bless $this;
 my $config = config::get();
 my $users = user::new();
 my $channels = channel::new();
+my $global = global::new();
 
 sub new {
 	$this->{'uid'} = $config->{'sid'}.'AAAAAC';
@@ -42,6 +44,12 @@ sub handle_privmsg {
 				$this->os_names($main,$from,$ex[1]);
 			} else { $this->ss($main,$from,'names','<channel>'); }
 		}
+		elsif ($command eq 'global') {
+			if (defined($ex[1])) {
+				my @m = split(/ /,$msg,2);
+				$this->os_global($main,$from,$m[1]);
+			} else { $this->ss($main,$from,'global','<message>'); }
+		}
 		else { $this->us($main,$from,$command); }
 	} else { $this->notice($main,$from,'Permission denied.'); }
 }
@@ -50,7 +58,7 @@ sub os_names {
 	my $chn = $channels->lookup($channel);
 	if ($chn) {
 		$this->notice($main,$uid,"\2Users in ".$chn->{'name'}."\2:");
-		my $i = 1;
+		my $i = 1;my $global = global::new();
 		foreach my $user (keys %{$chn->{'users'}}) {
 			$user = $users->lookup($user);
 			$this->notice($main,$uid,"\2$i\2. ".$user->{'nick'});
@@ -71,10 +79,15 @@ sub os_mode {
 }
 sub os_uptime {
 	my ($d,$main,$uid) = @_;
-	my $user = $users->lookup($uid);
 	my $seconds = (time)-($main->{'start'});
 	$seconds = $main->sec2human($seconds);
 	$this->notice($main,$uid,"\2Uptime\2: $seconds");
+}
+sub os_global {
+	my ($d,$main,$uid,$msg) = @_;
+	my $user = $users->lookup($uid);
+	$global->global_send($main,$uid,$msg);
+	$this->log($main,'Global',$user->{'nick'}.' GLOBAL '.$msg);
 }
 sub debug {
 	my ($d,$main,$a,$b) = @_;
