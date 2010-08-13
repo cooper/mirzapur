@@ -21,6 +21,9 @@ sub new {
 	if (!-e '../'.$config->{'dir'}.'/flags') {
 		$db->do("CREATE TABLE flags (channel TEXT, user INT, flags TEXT, date INT, setby INT)");
 	}
+	if (!-e '../'.$config->{'dir'}.'/ids') {
+		$db->do("CREATE TABLE ids (type TEXT, id INTEGER)");
+	}
 	return $db;
 	} else { die "DBD::CSV is the only backend support as of now. Support for other databases will be created in the future." }
 }

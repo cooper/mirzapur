@@ -17,24 +17,28 @@ my $this = {
 	back	=>	'csv',				# database backend (others not yet supported) default is 'csv'
 	dir	=>	'db',				# storage directory
 	# DNSBL
-	rbl =>	[				
+	rbl =>	[	
+	# uncomment/add listings to this array.
+	# it is recommended you use only mandatory listings
+	# as services tend to lag while checking connections
+			
 			'rbl.efnet.org',
-			'ircbl.ahbl.org',
-			'tor.dnsbl.sectoor.de',
-			'tor.ahbl.org',
-			'cbl.abuseat.org',
-			'dnsbl.njabl.org',
-			'virbl.dnsbl.bit.nl',
-			'no-more-funn.moensted.dk',
-			'dronebl.noderebellion.net',
-			'xbl.spamhaus.org',
-			'spbl.bl.winbots.org',
-			'dnsbl.ahbl.org',
-			'tor.sectoor.de',
-			'dnsbl.swiftbl.org',
-			'dnsbl.dronebl.org',
-			'tor.efnet.org',
-			'dnsbl.technoirc.org'
+			#'ircbl.ahbl.org',
+			#'tor.dnsbl.sectoor.de',
+			#'tor.ahbl.org',
+			#'cbl.abuseat.org',
+			#'dnsbl.njabl.org',
+			#'virbl.dnsbl.bit.nl',
+			#'no-more-funn.moensted.dk',
+			#'dronebl.noderebellion.net',
+			#'xbl.spamhaus.org',
+			#'spbl.bl.winbots.org',
+			#'dnsbl.ahbl.org',
+			#'tor.sectoor.de',
+			#'dnsbl.swiftbl.org',
+			#'dnsbl.dronebl.org',
+			#'tor.efnet.org',
+			#'dnsbl.technoirc.org'
 		],
 	# Service clients
 	ns => { # NickServ

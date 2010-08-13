@@ -43,6 +43,7 @@ while (my $data = <$socket>) {
 	if ($command eq 'QUIT') { $handler->quit($this,$data); }
 	if ($command eq 'PART') { $handler->part($this,$data); }
 	if ($command eq 'MODE') { $handler->usermode($this,$data); }
+	if ($command eq 'NICK') { $handler->nickchange($this,$data); }
 }
 sub connect {
 	my $this = shift;

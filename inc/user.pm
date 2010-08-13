@@ -44,6 +44,16 @@ sub handle_umode {
 		}
 	}
 }
+sub nickchange {
+	my ($d,$uid,$nick) = @_;
+	$this->{$uid}->{'nick'} = $nick if defined $this->{$uid};
+}
+sub identify {
+	my ($d,$uid,$id) = @_;
+	$this->{$uid}->{'id'} = $id if $this->{$uid};
+	return 1 if $this->{$uid};
+	return;
+}
 sub join {
 	my ($d,$user,$channel,$time) = @_;
 	$channels->adduser($user,$channel,$time);
@@ -54,6 +64,10 @@ sub quit {
 	foreach my $channel (keys %{channel::new()}) {
 		$channels->deluser($user,$channel);
 	}
+}
+sub full {
+	my ($d,$uid) = @_;
+	return $this->{$uid}->{'nick'}.'!'.$this->{$uid}->{'ident'}.'!'.$this->{$uid}->{'host'};
 }
 sub lookup {
 	my ($d,$uid) = @_;

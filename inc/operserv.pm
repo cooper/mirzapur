@@ -107,7 +107,7 @@ sub os_clearchan {
 				$channels->deluser($u,$chn->{'name'},time);
 				$i++;
 			} else {
-				$this->notice($main,$uid,$usr->{'nick'}." was ignored while clearing \2".$chn->{'name'}."\2.");
+				$this->notice($main,$uid,$usr->{'nick'}." was ignored while clearing \2".$chn->{'name'}."\2.") unless $uid eq $usr->{'uid'};
 				$this->notice($main,$u,"You were ignored while clearing \2".$chn->{'name'}."\2.");
 			}
 		}

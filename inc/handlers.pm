@@ -56,6 +56,13 @@ sub usermode {
 		$users->handle_umode($from,$ex[3]);
 	}
 }
+sub nickchange {
+	my ($d,$main,$data) = @_;
+	my @ex = split(/ /,$data);
+	my $from = $ex[0];
+	$from =~ s/\://;
+	$users->nickchange($from,$ex[2]);
+}
 sub part {
 	my ($d,$main,$data) = @_;
 	my @ex = split(/ /,$data);
@@ -90,6 +97,7 @@ sub privmsg {
 		$popm->handle_logmsg($main,$from,$msg);
 	}
 	if ($target eq $nickserv->{'uid'}) {
+		$nickserv->handle_privmsg($main,$from,$msg);
 	}
 	elsif ($target eq $chanserv->{'uid'}) {
 	}
