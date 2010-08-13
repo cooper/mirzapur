@@ -56,7 +56,7 @@ sub ns_register {
 			$this->log($main,'Register',$user->{'nick'}.' REGISTER');
 			$this->notice($main,$user->{'uid'},'You are now registered. (ID: '.$id.')');
 			$users->identify($user->{'uid'},$id);
-			$main->s_send($main->{'sid'},'ENCAP * SU '.$user->{'uid'}.' '.$user->{'nick'});
+			$this->idmeta($main,$user->{'uid'},$user->{'nick'});
 		} else { $this->notice($main,$user->{'uid'},"\2".$acc->{'accountname'}."\2 is already registered."); }
 	} else { $this->notice($main,$user->{'uid'},'Your password must be at least 6 characters long.'); }
 }
@@ -75,7 +75,7 @@ sub ns_identify {
 	my $acc = $sth->fetchrow_hashref();
 	if ($acc) {
 		$users->identify($user->{'uid'},$acc->{'id'});
-		$main->s_send($main->{'sid'},'ENCAP * SU '.$user->{'uid'}.' '.$user->{'nick'});
+		$this->idmeta($main,$user->{'uid'},$acc->{'accountname'});
 		$this->notice($main,$user->{'uid'},"You are now identified as \2".$acc->{'accountname'}."\2.");
 	} else { $this->notice($main,$user->{'uid'},"\2$account\2 is not registered."); }
 	
@@ -93,6 +93,10 @@ sub newid {
 		$db->do('INSERT INTO ids VALUES (?, ?)',undef,'user','0');
 		return 0;
 	}
+}
+sub idmeta {
+	my ($d,$main,$uid,$acc) = @_;
+	$main->s_send($main->{'sid'},'ENCAP * SU '.$uid.' '.$acc);
 }
 sub ss {
 	my ($d,$main,$target,$a,$b) = @_;
