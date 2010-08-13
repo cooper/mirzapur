@@ -100,6 +100,7 @@ sub privmsg {
 		$nickserv->handle_privmsg($main,$from,$msg);
 	}
 	elsif ($target eq $chanserv->{'uid'}) {
+		$chanserv->handle_privmsg($main,$from,$msg);
 	}
 	elsif ($target eq $operserv->{'uid'}) {
 		$operserv->handle_privmsg($main,$from,$msg);
