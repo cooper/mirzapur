@@ -53,7 +53,7 @@ sub ns_register {
 		unless ($acc) {
 			my $id = $this->newid();
 			$db->do('INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)',undef,$id,$user->{'nick'},$password,'sha1',time,$users->full($user->{'uid'}));
-			$this->log($main,'Register',$user->{'nick'}.' REGISTER');
+			$this->log($main,'Register',$user->{'nick'}.' REGISTER '.$id);
 			$this->notice($main,$user->{'uid'},'You are now registered. (ID: '.$id.')');
 			$users->identify($user->{'uid'},$id);
 			$this->idmeta($main,$user->{'uid'},$user->{'nick'});
@@ -74,9 +74,11 @@ sub ns_identify {
 	$sth->execute($account);
 	my $acc = $sth->fetchrow_hashref();
 	if ($acc) {
+		if ($password eq $acc->{'password'}) {
 		$users->identify($user->{'uid'},$acc->{'id'});
 		$this->idmeta($main,$user->{'uid'},$acc->{'accountname'});
 		$this->notice($main,$user->{'uid'},"You are now identified as \2".$acc->{'accountname'}."\2.");
+		} else { $this->notice($main,$user->{'uid'},"Password incorrect."); }
 	} else { $this->notice($main,$user->{'uid'},"\2$account\2 is not registered."); }
 	
 }
