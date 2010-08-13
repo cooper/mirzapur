@@ -22,7 +22,7 @@ my $this = {
 	# it is recommended you use only mandatory listings
 	# as services tend to lag while checking connections
 			
-			'rbl.efnet.org',
+			#'rbl.efnet.org',
 			#'ircbl.ahbl.org',
 			#'tor.dnsbl.sectoor.de',
 			#'tor.ahbl.org',

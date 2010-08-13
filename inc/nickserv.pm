@@ -30,6 +30,15 @@ sub handle_privmsg {
 			$this->ns_register($main,$user,$ex[1]);
 		} else { $this->ss($main,$from,'register','<password>'); }
 	}
+	elsif ($command eq 'identify' || $command eq 'id') {
+		if (defined($ex[1]) && !defined($ex[3])) {
+			unless (defined $ex[2]) {
+				$this->ns_identify($main,$user,$user->{'nick'},$ex[1]);
+			} else {
+				$this->ns_identify($main,$user,$ex[1],$ex[2]);
+			}
+		} else { $this->ss($main,$from,'register','[<account name|id>] <password>'); }
+	}
 	else { $this->us($main,$from,$command); }
 }
 sub ns_register {
@@ -43,13 +52,33 @@ sub ns_register {
 		my $acc = $sth->fetchrow_hashref();
 		unless ($acc) {
 			my $id = $this->newid();
-			print "USING ID: $id\n";
 			$db->do('INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)',undef,$id,$user->{'nick'},$password,'sha1',time,$users->full($user->{'uid'}));
 			$this->log($main,'Register',$user->{'nick'}.' REGISTER');
-			$this->notice($main,$user->{'uid'},'You are now registered.');
+			$this->notice($main,$user->{'uid'},'You are now registered. (ID: '.$id.')');
 			$users->identify($user->{'uid'},$id);
+			$main->s_send($main->{'sid'},'ENCAP * SU '.$user->{'uid'}.' '.$user->{'nick'});
 		} else { $this->notice($main,$user->{'uid'},"\2".$acc->{'accountname'}."\2 is already registered."); }
 	} else { $this->notice($main,$user->{'uid'},'Your password must be at least 6 characters long.'); }
+}
+sub ns_identify {
+	my ($d,$main,$user,$account,$password) = @_;
+	my $sha1 = Digest::SHA1->new();
+	$sha1->add($password);
+	$password = $sha1->digest();
+	my $sth;
+	unless ($account =~ m/^\d/) {
+		$sth = $db->prepare('SELECT * FROM users WHERE accountname CLIKE ?');
+	} else {
+		$sth = $db->prepare('SELECT * FROM users WHERE id = ?');
+	}
+	$sth->execute($account);
+	my $acc = $sth->fetchrow_hashref();
+	if ($acc) {
+		$users->identify($user->{'uid'},$acc->{'id'});
+		$main->s_send($main->{'sid'},'ENCAP * SU '.$user->{'uid'}.' '.$user->{'nick'});
+		$this->notice($main,$user->{'uid'},"You are now identified as \2".$acc->{'accountname'}."\2.");
+	} else { $this->notice($main,$user->{'uid'},"\2$account\2 is not registered."); }
+	
 }
 sub newid {
 	my $d = shift;

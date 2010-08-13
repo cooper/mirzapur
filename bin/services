@@ -98,8 +98,7 @@ sub client_mode {
 	my ($this,$uid,$target,$str) = @_;
 	my $channel = $channels->lookup($target);
 	my $time;
-	$time = $channel->{'time'} if defined $channel->{'time'};
-	$time = time unless defined $channel->{'time'};
+	$time = $channels->time($target);
 	$this->s_send($uid,"TMODE $time $target $str");
 }
 sub client_kick {
