@@ -109,8 +109,11 @@ sub handle_privmsg {
 	my $target = $ex[2];
 	my $msg = $m[3];
 	$msg =~ s/\://;
-	if ($target eq $main->{'log'}) {
-		$popm->handle_logmsg($main,$from,$msg);
+	if ($target =~ m/^\#/) {
+		if ($target eq $main->{'log'}) {
+			$popm->handle_logmsg($main,$from,$msg);
+		}
+		$chanserv->handle_fantasy($main,$from,$msg);
 	}
 	if ($target eq $nickserv->{'uid'}) {
 		$nickserv->handle_privmsg($main,$from,$msg);

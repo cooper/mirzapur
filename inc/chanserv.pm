@@ -23,6 +23,9 @@ sub handle_privmsg {
 	my $command = lc($ex[0]);
 	my $user = $users->lookup($from);
 }
+sub handle_fantasy {
+	# TODO
+}
 sub ss {
 	my ($d,$main,$target,$a,$b) = @_;
 	$main->client_notice($this->{'uid'},$target,"Incorrect syntax for \2".uc($a).".\2");
