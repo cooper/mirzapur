@@ -39,6 +39,16 @@ sub handle_privmsg {
 			}
 		} else { $this->ss($main,$from,'register','[<account name|id>] <password>'); }
 	}
+	elsif ($command eq 'set') {
+		my $c = lc $ex[1];
+		if (defined $ex[2]) {
+			if ($c eq 'accountname') {
+				unless (defined $ex[3]) {
+					$this->ns_set_accountname($main,$user,$ex[2]);
+				} else { $this->ss($main,$from,'set accountname','<accountname>'); }
+			} else { $this->notice($main,$from,"Unknown option \2".uc($c)."\2."); }
+		} else { $this->ss($main,$from,'set','<option> <parameter(s)>'); }
+	}
 	else { $this->us($main,$from,$command); }
 }
 sub ns_register {
@@ -78,9 +88,30 @@ sub ns_identify {
 		$users->identify($user->{'uid'},$acc->{'id'});
 		$this->idmeta($main,$user->{'uid'},$acc->{'accountname'});
 		$this->notice($main,$user->{'uid'},"You are now identified as \2".$acc->{'accountname'}."\2.");
+		$this->log($main,'Identify',$user->{'nick'}.' IDENTIFY '.$acc->{'accountname'}.' ('.$acc->{'id'}.')');
 		} else { $this->notice($main,$user->{'uid'},"Password incorrect."); }
 	} else { $this->notice($main,$user->{'uid'},"\2$account\2 is not registered."); }
 	
+}
+sub ns_set_accountname {
+	my ($d,$main,$user,$accountname) = @_;
+	if (defined($user->{'id'})) {
+		if ($main->isvalidnick($accountname)) {
+			unless ($this->taken_name($accountname)) {
+				$db->do('UPDATE users SET accountname = ? WHERE id = ?',undef,$accountname,$user->{'id'});
+				$this->log($main,'Set',$this->nn($user).' SET:ACCOUNTNAME '.$accountname);
+				$this->notice($main,$user->{'uid'},"Your accountname is now \2$accountname\2.");
+			} else { $this->notice($main,$user->{'uid'},"\2$accountname\2 is a taken accountname."); }
+		} else { $this->notice($main,$user->{'uid'},"\2$accountname\2 is not a valid accountname."); }
+	} else { $this->notice($main,$user->{'uid'},'You are not identified.'); }
+}
+sub nn {
+	my ($d,$user) = @_;
+	my $sth = $db->prepare('SELECT * FROM users WHERE id = ?');
+	$sth->execute($user->{'id'});
+	my $acc = $sth->fetchrow_hashref();
+	if (defined($user->{'id'})) { return $user->{'nick'}.' ('.$user->{'id'}.':'.$acc->{'accountname'}.')'; }
+	return $user->{'nick'};
 }
 sub newid {
 	my $d = shift;
@@ -95,6 +126,19 @@ sub newid {
 		$db->do('INSERT INTO ids VALUES (?, ?)',undef,'user','0');
 		return 0;
 	}
+}
+sub taken_name {
+	my ($d,$acc) = @_;
+	my $sth = $db->prepare('SELECT * FROM users WHERE accountname CLIKE ?');
+	$sth->execute($acc);
+	return $sth->fetchrow_hashref();
+}
+sub accinfo {
+	my $d = shift;
+	my $id = shift;
+	my $sth = $db->prepare('SELECT * FROM users WHERE id = ?');
+	$sth->execute($id);
+	return $sth->fetchrow_hashref();
 }
 sub idmeta {
 	my ($d,$main,$uid,$acc) = @_;

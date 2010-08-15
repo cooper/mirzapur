@@ -35,16 +35,9 @@ while (my $data = <$socket>) {
 	my $from = $ex[0]; $from =~ s/\://;
 	my $command = $ex[1];
 	print "$data\n";
-	if ($from eq 'PING') { $handler->r_ping($this,$data); }
-	if ($command eq 'EUID') { $handler->euid($this,$data); }
-	if ($command eq 'SJOIN') { $handler->sjoin($this,$data); }
-	if ($command eq 'JOIN') { $handler->join($this,$data); }
-	if ($command eq 'PRIVMSG') { $handler->privmsg($this,$data); }
-	if ($command eq 'QUIT') { $handler->quit($this,$data); }
-	if ($command eq 'PART') { $handler->part($this,$data); }
-	if ($command eq 'MODE') { $handler->usermode($this,$data); }
-	if ($command eq 'NICK') { $handler->nickchange($this,$data); }
+	$handler->handle($this,$data);
 }
+sub ping { print "LOLKKKK\n";}
 sub connect {
 	my $this = shift;
 	$socket = IO::Socket::INET->new(
@@ -105,10 +98,16 @@ sub client_kick {
 	my ($this,$uid,$channel,$target,$msg) = @_;
 	$this->s_send($uid,"KICK $channel $target :$msg");
 }
+sub isvalidnick {
+	my ($this,$nick) = @_;
+	return 0 if($nick=~/^[\d\-]/);
+	return 0 if($nick=~/[^A-Za-z0-9-\[\]\\\`\^\|\{\}\_]/);
+	return 1;
+}
 sub sec2human {
 	my $d = shift;
 	my $secs = shift;
-	if    ($secs >= 365*24*60*60) { return sprintf '%.1f years ('.$secs.' seconds)', $secs/(365+*24*60*60); }
+	if ($secs >= 365*24*60*60) { return sprintf '%.1f years ('.$secs.' seconds)', $secs/(365+*24*60*60); }
 	elsif ($secs >= 24*60*60) { return sprintf '%.1f days ('.$secs.' seconds)', $secs/(+24*60*60); }
 	elsif ($secs >= 60*60) { return sprintf '%.1f hours ('.$secs.' seconds)', $secs/(+60*60); }
 	elsif ($secs >= 60) { return sprintf '%.1f minutes ('.$secs.' seconds)', $secs/(+60); }

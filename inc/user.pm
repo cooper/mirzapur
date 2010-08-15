@@ -54,6 +54,11 @@ sub identify {
 	return 1 if $this->{$uid};
 	return;
 }
+sub id {
+	my ($d,$uid) = @_;
+	return $this->{$uid}->{'id'} if defined $this->{$uid}->{'id'};
+	return;
+}
 sub join {
 	my ($d,$user,$channel,$time) = @_;
 	$channels->adduser($user,$channel,$time);
